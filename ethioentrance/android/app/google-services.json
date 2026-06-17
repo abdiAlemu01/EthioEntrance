@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "856852356425",
+    "project_id": "ethioentrance-e72b6",
+    "storage_bucket": "ethioentrance-e72b6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:856852356425:android:4e79fa6db143f02cfece98",
+        "android_client_info": {
+          "package_name": "Abdi_Alemu.com.EthioEntrance"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwhy4y-X6nZZV2DIs49J1uSYzDVVvxrfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
