@@ -13,7 +13,9 @@ class Textbook {
   int fileSize;
   int pageCount;
   bool isProcessed;
+  @Property(type: PropertyType.date)
   DateTime createdAt;
+  @Property(type: PropertyType.date)
   DateTime updatedAt;
   
   @Transient()
@@ -41,11 +43,12 @@ class TextbookChunk {
   
   String chunkText;
   int chunkIndex;
-  @Property(type:  PropertyType.doubleVector)
+   @Property(type :  PropertyType.doubleVector)
   List<double> embedding;
   
   final textbook = ToOne<Textbook>();
   
+  @Property(type: PropertyType.date)
   DateTime createdAt;
   
   TextbookChunk({
@@ -65,7 +68,9 @@ class Subject {
   String name;
   String subjectCode;
   String description;
+  @Property(type: PropertyType.date)
   DateTime createdAt;
+  @Property(type: PropertyType.date)
   DateTime updatedAt;
   
   Subject({
@@ -90,7 +95,9 @@ class UserProfile {
   String lastName;
   int? grade;
   bool isPremium;
+  @Property(type: PropertyType.date)
   DateTime createdAt;
+  @Property(type: PropertyType.date)
   DateTime updatedAt;
   
   UserProfile({
@@ -117,6 +124,7 @@ class ChatMessage {
   bool isUser;
   String response;
   List<String> sourceTextbookIds;
+  @Property(type: PropertyType.date)
   DateTime createdAt;
   
   ChatMessage({
@@ -141,8 +149,11 @@ class UserProgress {
   int completedPages;
   int totalPages;
   double progressPercentage;
+  @Property(type: PropertyType.date)
   DateTime lastAccessedAt;
+  @Property(type: PropertyType.date)
   DateTime createdAt;
+  @Property(type: PropertyType.date)
   DateTime updatedAt;
   
   UserProgress({
@@ -173,6 +184,7 @@ class QuizResult {
   int correctAnswers;
   double score;
   int durationMinutes;
+  @Property(type: PropertyType.date)
   DateTime completedAt;
   
   QuizResult({

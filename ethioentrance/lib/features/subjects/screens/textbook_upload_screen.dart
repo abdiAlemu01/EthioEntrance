@@ -7,6 +7,8 @@ import '../../../core/database/objectbox/objectbox_service.dart';
 import '../../../core/database/objectbox/models.dart';
 import '../../../core/processing/pdf_processing_service.dart';
 import '../../../core/ai/rag_service.dart';
+import '../../../core/ai/embedding_service.dart';
+import '../../../core/ai/text_generation_service.dart';
 
 /// Textbook import screen with PDF processing
 /// 
@@ -36,6 +38,8 @@ class _TextbookImportScreenState extends ConsumerState<TextbookImportScreen> {
   
   final ObjectBoxService _objectBoxService = ObjectBoxService.instance;
   final PdfProcessingService _pdfProcessingService = PdfProcessingService();
+  final EmbeddingService _embeddingService = EmbeddingService();
+  final TextGenerationService _textGenerationService = TextGenerationService();
   late final RagService _ragService;
 
   String? _selectedSubjectCode;
@@ -53,8 +57,8 @@ class _TextbookImportScreenState extends ConsumerState<TextbookImportScreen> {
     super.initState();
     _ragService = RagService(
       _objectBoxService,
-      EmbeddingService(),
-      TextGenerationService(),
+      _embeddingService,
+      _textGenerationService,
     );
     _loadData();
   }

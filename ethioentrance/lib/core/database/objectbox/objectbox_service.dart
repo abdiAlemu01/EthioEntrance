@@ -3,7 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:objectbox/objectbox.dart';
 import 'models.dart';
-import '../objectbox.g.dart';
+import '../../../objectbox.g.dart';
 
 /// ObjectBox database service for local data storage with vector search capabilities
 /// 
@@ -42,7 +42,6 @@ class ObjectBoxService {
     final docsDir = await getApplicationDocumentsDirectory();
     final store = await openStore(
       directory: p.join(docsDir.path, 'objectbox'),
-      macOSApplicationGroup: 'com.ethioentrance.app',
     );
 
     _instance = ObjectBoxService._create(store);
@@ -291,7 +290,8 @@ class ObjectBoxService {
         .build()
         .find();
     
-    return chatMessageBox.removeMany(messages.map((m) => m.id).toList());
+    chatMessageBox.removeMany(messages.map((m) => m.id).toList());
+    return true;
   }
 
   // ==================== USER PROGRESS OPERATIONS ====================

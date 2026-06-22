@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
-import 'package:injectable/injectable.dart';
 
 /// Local embedding service using TensorFlow Lite
 /// 
@@ -16,7 +15,6 @@ import 'package:injectable/injectable.dart';
 /// Future Enhancement:
 /// - Can be adapted to use EmbeddingGemma when Flutter support is available
 /// - Supports model switching based on device capabilities
-@injectable
 class EmbeddingService {
   tfl.Interpreter? _interpreter;
   bool _isInitialized = false;

@@ -1,6 +1,7 @@
 
 // subject_service.dart - Offline-first architecture
 
+import 'dart:typed_data';
 import '../../../core/database/objectbox/objectbox_service.dart';
 import '../../../core/database/objectbox/models.dart';
 import '../models/subject_model.dart';
@@ -139,6 +140,58 @@ class SubjectService {
   /// -------------------------------
   void initializeDefaultSubjects() {
     _objectBoxService.initializeDefaultSubjects();
+  }
+
+  // ==================== LEGACY METHODS FOR COMPATIBILITY ====================
+  // These methods are deprecated and maintained for backward compatibility
+  // with the old SubjectProvider. They will be removed in future versions.
+
+  /// @deprecated Use TextbookImportScreen instead
+  Future<void> uploadPdfAndVideo({
+    required String subjectId,
+    required String subjectName,
+    required int grade,
+    required Uint8List pdfFile,
+    required Uint8List videoFile,
+  }) async {
+    throw UnimplementedError(
+      'uploadPdfAndVideo is deprecated. Use TextbookImportScreen instead.',
+    );
+  }
+
+  /// @deprecated Use getLegacySubjectModel instead
+  Future<SubjectModel> getPdfAndVideo(String subjectId) async {
+    final subject = _objectBoxService.getSubjectByCode(subjectId);
+    if (subject == null) {
+      throw Exception('Subject not found');
+    }
+    return getLegacySubjectModel(subject.subjectCode) ?? SubjectModel(
+      name: subject.name,
+      grade: subject.subjectCode,
+      grade9Courses: [],
+      grade9Videos: [],
+      grade10Courses: [],
+      grade10Videos: [],
+      grade11Courses: [],
+      grade11Videos: [],
+      grade12Courses: [],
+      grade12Videos: [],
+    );
+  }
+
+  /// @deprecated Use getResourcesByGrade instead
+  Future<Map<String, List<String>>> getByGrade({
+    required String subjectId,
+    required int grade,
+  }) async {
+    final textbooks = getTextbooksBySubjectAndGrade(
+      subjectCode: subjectId,
+      grade: grade,
+    );
+    return {
+      'courses': textbooks.map((t) => getTextbookPath(t)).toList(),
+      'videos': [],
+    };
   }
 }
 
