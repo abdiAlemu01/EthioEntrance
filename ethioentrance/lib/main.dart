@@ -6,11 +6,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
  import 'routes/app_routes.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'core/database/objectbox/objectbox_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Supabase
+  // Initialize ObjectBox database
+  await ObjectBoxService.init();
+
+  // Initialize Supabase for authentication only
+  // Replace these with your actual Supabase project credentials
+  // Get these from: https://supabase.com/dashboard
   await Supabase.initialize(
     url: 'YOUR_SUPABASE_URL',
     anonKey: 'YOUR_SUPABASE_ANON_KEY',

@@ -1,0 +1,369 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:4116015513592481801",
+      "lastPropertyId": "7:6342858253352834301",
+      "name": "ChatMessage",
+      "properties": [
+        {
+          "id": "1:4482910682150416658",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3317828204513598000",
+          "name": "userSupabaseId",
+          "type": 9
+        },
+        {
+          "id": "3:1752091508111459656",
+          "name": "message",
+          "type": 9
+        },
+        {
+          "id": "4:7672671001962769084",
+          "name": "isUser",
+          "type": 1
+        },
+        {
+          "id": "5:8786075534898045507",
+          "name": "response",
+          "type": 9
+        },
+        {
+          "id": "6:6290802186253961991",
+          "name": "sourceTextbookIds",
+          "type": 30
+        },
+        {
+          "id": "7:6342858253352834301",
+          "name": "createdAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:2757515627549073300",
+      "lastPropertyId": "9:634110694115170085",
+      "name": "QuizResult",
+      "properties": [
+        {
+          "id": "1:2801390201627132597",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7648819588022213474",
+          "name": "userSupabaseId",
+          "type": 9
+        },
+        {
+          "id": "3:6613167907554262495",
+          "name": "subjectCode",
+          "type": 9
+        },
+        {
+          "id": "4:2973106427887244068",
+          "name": "grade",
+          "type": 6
+        },
+        {
+          "id": "5:485037056357113370",
+          "name": "totalQuestions",
+          "type": 6
+        },
+        {
+          "id": "6:8495809005961554718",
+          "name": "correctAnswers",
+          "type": 6
+        },
+        {
+          "id": "7:4176108749703686297",
+          "name": "score",
+          "type": 8
+        },
+        {
+          "id": "8:5409248955520501806",
+          "name": "durationMinutes",
+          "type": 6
+        },
+        {
+          "id": "9:634110694115170085",
+          "name": "completedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:4615717302247308991",
+      "lastPropertyId": "6:1338485980178578817",
+      "name": "Subject",
+      "properties": [
+        {
+          "id": "1:59260056013627260",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1833842442573459678",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "3:5262610002675671096",
+          "name": "subjectCode",
+          "type": 9
+        },
+        {
+          "id": "4:5472966445020041969",
+          "name": "description",
+          "type": 9
+        },
+        {
+          "id": "5:3073042317287282063",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "6:1338485980178578817",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:3974065955896488451",
+      "lastPropertyId": "10:3234768393229631016",
+      "name": "Textbook",
+      "properties": [
+        {
+          "id": "1:5378568322990998895",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5124895285015973916",
+          "name": "title",
+          "type": 9
+        },
+        {
+          "id": "3:122438309647019096",
+          "name": "subjectCode",
+          "type": 9
+        },
+        {
+          "id": "4:7830985147136995787",
+          "name": "grade",
+          "type": 6
+        },
+        {
+          "id": "5:5320179184752121950",
+          "name": "filePath",
+          "type": 9
+        },
+        {
+          "id": "6:3956186200072271132",
+          "name": "fileSize",
+          "type": 6
+        },
+        {
+          "id": "7:7118377723743156633",
+          "name": "pageCount",
+          "type": 6
+        },
+        {
+          "id": "8:4151573621769053681",
+          "name": "isProcessed",
+          "type": 1
+        },
+        {
+          "id": "9:6888053553618934798",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "10:3234768393229631016",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:5787175614198442148",
+      "lastPropertyId": "6:8538558964345464028",
+      "name": "TextbookChunk",
+      "properties": [
+        {
+          "id": "1:293273695227751420",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2268232807428644018",
+          "name": "chunkText",
+          "type": 9
+        },
+        {
+          "id": "3:9101410919043306784",
+          "name": "chunkIndex",
+          "type": 6
+        },
+        {
+          "id": "4:1665269981442882541",
+          "name": "embedding",
+          "type": 29
+        },
+        {
+          "id": "5:1652204372709998729",
+          "name": "textbookId",
+          "type": 11,
+          "flags": 520,
+          "indexId": "1:2265054185031022173",
+          "relationTarget": "Textbook"
+        },
+        {
+          "id": "6:8538558964345464028",
+          "name": "createdAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:4896875631737941585",
+      "lastPropertyId": "9:1851727771280845090",
+      "name": "UserProfile",
+      "properties": [
+        {
+          "id": "1:385937721683152452",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3840956014936952128",
+          "name": "supabaseUserId",
+          "type": 9
+        },
+        {
+          "id": "3:598765609343191389",
+          "name": "email",
+          "type": 9
+        },
+        {
+          "id": "4:4161644889273442381",
+          "name": "firstName",
+          "type": 9
+        },
+        {
+          "id": "5:8357494253113383448",
+          "name": "lastName",
+          "type": 9
+        },
+        {
+          "id": "6:5586971783562003160",
+          "name": "grade",
+          "type": 6
+        },
+        {
+          "id": "7:4358583954377305047",
+          "name": "isPremium",
+          "type": 1
+        },
+        {
+          "id": "8:1549279959690894484",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "9:1851727771280845090",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:8550711164787482405",
+      "lastPropertyId": "10:2560223921533167051",
+      "name": "UserProgress",
+      "properties": [
+        {
+          "id": "1:4296051907309180915",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1190627659309387437",
+          "name": "userSupabaseId",
+          "type": 9
+        },
+        {
+          "id": "3:4147860876999170879",
+          "name": "subjectCode",
+          "type": 9
+        },
+        {
+          "id": "4:4965580476583732192",
+          "name": "grade",
+          "type": 6
+        },
+        {
+          "id": "5:1952224630239009047",
+          "name": "completedPages",
+          "type": 6
+        },
+        {
+          "id": "6:7355192246275083283",
+          "name": "totalPages",
+          "type": 6
+        },
+        {
+          "id": "7:4470567368560741033",
+          "name": "progressPercentage",
+          "type": 8
+        },
+        {
+          "id": "8:6034187445677365297",
+          "name": "lastAccessedAt",
+          "type": 10
+        },
+        {
+          "id": "9:1167263387010706323",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "10:2560223921533167051",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "7:8550711164787482405",
+  "lastIndexId": "1:2265054185031022173",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

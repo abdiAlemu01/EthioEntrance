@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 
+
 final authProvider =
     StateNotifierProvider<AuthNotifier, List<UserFirebase>>((ref) {
   return AuthNotifier(AuthService());
@@ -20,8 +21,8 @@ class AuthNotifier extends StateNotifier<List<UserFirebase>> {
   // listen for authentication changes
   void _init() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      if (data.user != null) {
-        _addUserFromAuth(data.user!);
+      if (data.session?.user != null) {
+        _addUserFromAuth(data.session!.user);
       } else {
         state = [];
       }

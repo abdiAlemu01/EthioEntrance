@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
+import '../features/subjects/screens/textbook_upload_screen.dart';
 import '../home.dart';
 
 final GoRouter router = GoRouter(
@@ -63,6 +64,11 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/team',
       builder: (context, state) => const HomePage(),
+    ),
+
+    GoRoute(
+      path: '/textbook-upload',
+      builder: (context, state) => const TextbookImportScreen(),
     ),
 
   ],

@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/subject_model.dart';
 import '../services/subject_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/database/objectbox/objectbox_service.dart';
 
-/// Provide SubjectService (Ensure SubjectService is updated to use SupabaseClient)
+/// Provide SubjectService (Now uses ObjectBoxService for offline-first)
 final subjectServiceProvider = Provider<SubjectService>((ref) {
-  return SubjectService(Supabase.instance.client);
+  return SubjectService(ObjectBoxService.instance);
 });
 
 /// ChangeNotifier Provider

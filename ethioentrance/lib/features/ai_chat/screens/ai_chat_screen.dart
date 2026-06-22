@@ -1,9 +1,12 @@
 
 
-
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/chat_provider.dart';
+import '../../../core/database/objectbox/objectbox_service.dart';
+import '../../../core/ai/rag_service.dart';
+import '../../../core/ai/embedding_service.dart';
+import '../../../core/ai/text_generation_service.dart';
 
 class AiResponsePage extends StatefulWidget {
   const AiResponsePage({super.key});
@@ -16,9 +19,33 @@ class _AiResponsePageState extends State<AiResponsePage> {
   final TextEditingController _promptController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  final List<Map<String, String>> _messages = []; // {role: 'user/ai', text: '...'}
+  final List<Map<String, dynamic>> _messages = []; // {role: 'user/ai', text: '...', sources: []}
   bool _isLoading = false;
   String? _errorMessage;
+  
+  // Simple ChatProvider instance (in production, use dependency injection)
+  late final ChatProvider _chatProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatProvider = ChatProvider(
+      RagService(
+        ObjectBoxService.instance,
+        EmbeddingService(),
+        TextGenerationService(),
+      ),
+    );
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    final userId = Supabase.instance.client.auth.currentSession?.user.id;
+    if (userId != null) {
+      _chatProvider.setUserContext(userId: userId);
+      await _chatProvider.initialize();
+    }
+  }
 
   @override
   void dispose() {
@@ -45,15 +72,19 @@ class _AiResponsePageState extends State<AiResponsePage> {
     _scrollToBottom();
 
     try {
-      final responseText = await askAI(prompt);
+      final response = await _chatProvider.askQuestion(question: prompt);
 
       setState(() {
-        _messages.add({'role': 'ai', 'text': responseText});
+        _messages.add({
+          'role': 'ai',
+          'text': response.answer,
+          'sources': response.sources.map((s) => s.toJson()).toList(),
+        });
       });
       _scrollToBottom();
     } catch (e) {
       setState(() {
-        _messages.add({'role': 'ai', 'text': 'Failed to get AI response.'});
+        _messages.add({'role': 'ai', 'text': 'Failed to get AI response.', 'sources': []});
       });
       print('AI Error: $e');
     } finally {
@@ -94,29 +125,80 @@ class _AiResponsePageState extends State<AiResponsePage> {
                   itemBuilder: (context, index) {
                     final msg = _messages[index];
                     final isUser = msg['role'] == 'user';
-                    return Align(
-                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(12),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        decoration: BoxDecoration(
-                          color: isUser ? Colors.blue.shade600 : Colors.grey.shade200,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(12),
-                            topRight: const Radius.circular(12),
-                            bottomLeft: Radius.circular(isUser ? 12 : 0),
-                            bottomRight: Radius.circular(isUser ? 0 : 12),
+                    final sources = msg['sources'] as List<dynamic>? ?? [];
+                    
+                    return Column(
+                      crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      children: [
+                        Align(
+                          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(12),
+                            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                            decoration: BoxDecoration(
+                              color: isUser ? Colors.blue.shade600 : Colors.grey.shade200,
+                              borderRadius: BorderRadius.only(
+                                topLeft: const Radius.circular(12),
+                                topRight: const Radius.circular(12),
+                                bottomLeft: Radius.circular(isUser ? 12 : 0),
+                                bottomRight: Radius.circular(isUser ? 0 : 12),
+                              ),
+                            ),
+                            child: Text(
+                              msg['text']!,
+                              style: TextStyle(
+                                color: isUser ? Colors.white : Colors.black87,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(
-                          msg['text']!,
-                          style: TextStyle(
-                            color: isUser ? Colors.white : Colors.black87,
-                            fontSize: 16,
+                        // Display sources for AI responses
+                        if (!isUser && sources.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(left: 8, bottom: 8),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.source, size: 16, color: Colors.green.shade700),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Sources',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                ...sources.map((source) {
+                                  final sourceMap = source as Map<String, dynamic>;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 8, top: 2),
+                                    child: Text(
+                                      '• ${sourceMap['textbook'] ?? 'Unknown'} (Grade ${sourceMap['grade'] ?? '?'})',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
+                      ],
                     );
                   },
                 ),

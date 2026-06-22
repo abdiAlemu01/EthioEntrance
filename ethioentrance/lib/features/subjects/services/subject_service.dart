@@ -1,108 +1,144 @@
 
-// subject_service.dart
+// subject_service.dart - Offline-first architecture
 
-import 'dart:typed_data';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-
+import '../../../core/database/objectbox/objectbox_service.dart';
+import '../../../core/database/objectbox/models.dart';
 import '../models/subject_model.dart';
 
+/// Subject service using offline-first architecture
+/// 
+/// This service now uses ObjectBox for local data storage instead of Supabase.
+/// All data is stored locally on the device for offline access.
+/// 
+/// Architecture Decision:
+/// - Uses ObjectBox for local database
+/// - Completely offline - no external API calls for data
+/// - Fast local queries
+/// - Follows repository pattern principles
 class SubjectService {
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
+  final ObjectBoxService _objectBoxService;
 
-  SubjectService(this._firestore, this._storage);
+  SubjectService(this._objectBoxService);
 
   /// -------------------------------
-  /// 1. Upload PDF & Video
+  /// 1. Get all subjects
   /// -------------------------------
-  Future<void> uploadPdfAndVideo({
-    required String subjectId, // e.g. "math"
-    required String subjectName,
-    required int grade, // 9,10,11,12
-    required Uint8List pdfFile,
-    required Uint8List videoFile,
-  }) async {
+  List<Subject> getSubjects() {
     try {
-      /// Storage paths
-      final pdfRef = _storage
-          .ref()
-          .child('subjects/$subjectId/grade$grade/pdfs/${DateTime.now().millisecondsSinceEpoch}.pdf');
+      return _objectBoxService.getAllSubjects();
+    } catch (e) {
+      throw Exception('Failed to fetch subjects: $e');
+    }
+  }
 
-      final videoRef = _storage
-          .ref()
-          .child('subjects/$subjectId/grade$grade/videos/${DateTime.now().millisecondsSinceEpoch}.mp4');
+  /// -------------------------------
+  /// 2. Get subject by code
+  /// -------------------------------
+  Subject? getSubjectByCode(String subjectCode) {
+    try {
+      return _objectBoxService.getSubjectByCode(subjectCode);
+    } catch (e) {
+      throw Exception('Failed to fetch subject: $e');
+    }
+  }
 
-      /// Upload files
-      await pdfRef.putData(pdfFile);
-      await videoRef.putData(videoFile);
+  /// -------------------------------
+  /// 3. Get textbooks by subject and grade
+  /// -------------------------------
+  List<Textbook> getTextbooksBySubjectAndGrade({
+    required String subjectCode,
+    required int grade,
+  }) {
+    try {
+      return _objectBoxService.getTextbooksBySubjectAndGrade(subjectCode, grade);
+    } catch (e) {
+      throw Exception('Failed to fetch textbooks: $e');
+    }
+  }
 
-      /// Get URLs
-      final pdfUrl = await pdfRef.getDownloadURL();
-      final videoUrl = await videoRef.getDownloadURL();
+  /// -------------------------------
+  /// 4. Get all textbooks for a user
+  /// -------------------------------
+  List<Textbook> getAllTextbooks() {
+    try {
+      return _objectBoxService.getAllTextbooks();
+    } catch (e) {
+      throw Exception('Failed to fetch textbooks: $e');
+    }
+  }
 
-      /// Reference to Firestore doc
-      final docRef = _firestore.collection('subjects').doc(subjectId);
+  /// -------------------------------
+  /// 5. Get resources by subject and grade (textbooks only)
+  /// -------------------------------
+  Map<String, List<Textbook>> getResourcesByGrade({
+    required String subjectCode,
+    required int grade,
+  }) {
+    try {
+      final textbooks = getTextbooksBySubjectAndGrade(
+        subjectCode: subjectCode,
+        grade: grade,
+      );
 
-      final docSnapshot = await docRef.get();
+      return {
+        'textbooks': textbooks,
+      };
+    } catch (e) {
+      throw Exception('Failed to fetch resources: $e');
+    }
+  }
 
-      /// If subject does NOT exist → create new
-      if (!docSnapshot.exists) {
-        final newSubject = SubjectModel(
-          grade: subjectId,
-          name: subjectName,
+  /// -------------------------------
+  /// 6. Get textbook file path
+  /// -------------------------------
+  String getTextbookPath(Textbook textbook) {
+    return textbook.filePath;
+  }
+
+  /// -------------------------------
+  /// 7. Convert to legacy SubjectModel format (for backward compatibility)
+  /// -------------------------------
+  SubjectModel? getLegacySubjectModel(String subjectCode) {
+    try {
+      final subject = getSubjectByCode(subjectCode);
+      if (subject == null) return null;
+
+      // Fetch textbooks for all grades
+      final Map<int, List<String>> coursesByGrade = {};
+
+      for (int grade = 9; grade <= 12; grade++) {
+        final textbooks = getTextbooksBySubjectAndGrade(
+          subjectCode: subjectCode,
+          grade: grade,
         );
 
-        await docRef.set(newSubject.toFirestoreMap());
+        coursesByGrade[grade] = textbooks
+            .map((t) => getTextbookPath(t))
+            .toList();
       }
 
-      /// Update based on grade
-      await docRef.update({
-        'grade${grade}Courses': FieldValue.arrayUnion([pdfUrl]),
-        'grade${grade}Videos': FieldValue.arrayUnion([videoUrl]),
-      });
+      return SubjectModel(
+        name: subject.name,
+        grade: subject.subjectCode,
+        grade9Courses: coursesByGrade[9] ?? [],
+        grade9Videos: [], // Videos not implemented in offline version
+        grade10Courses: coursesByGrade[10] ?? [],
+        grade10Videos: [],
+        grade11Courses: coursesByGrade[11] ?? [],
+        grade11Videos: [],
+        grade12Courses: coursesByGrade[12] ?? [],
+        grade12Videos: [],
+      );
     } catch (e) {
-      throw Exception('Upload failed: $e');
+      throw Exception('Failed to fetch legacy subject model: $e');
     }
   }
 
   /// -------------------------------
-  /// 2. Get PDF & Video by Subject
+  /// 8. Initialize default subjects
   /// -------------------------------
-  Future<SubjectModel?> getPdfAndVideo(String subjectId) async {
-    try {
-      final doc =
-          await _firestore.collection('subjects').doc(subjectId).get();
-
-      if (!doc.exists) return null;
-
-      return SubjectModel.fromMap(doc.data()!);
-    } catch (e) {
-      throw Exception('Fetch failed: $e');
-    }
-  }
-
-  /// -------------------------------
-  /// 3. Get by Grade (Helper)
-  /// -------------------------------
-  Future<Map<String, List<String>>> getByGrade({
-    required String subjectId,
-    required int grade,
-  }) async {
-    final subject = await getPdfAndVideo(subjectId);
-
-    if (subject == null) {
-      return {
-        'courses': [],
-        'videos': [],
-      };
-    }
-
-    return {
-      'courses': subject.getCoursesForGrade(grade),
-      'videos': subject.getVideosForGrade(grade),
-    };
+  void initializeDefaultSubjects() {
+    _objectBoxService.initializeDefaultSubjects();
   }
 }
 
