@@ -26,7 +26,7 @@ class ProfileService {
   /// Watches the signed-in user's profile and emits updates in real time.
   Stream<ProfileModel?> watchCurrentUserProfile() {
     return _supabase.auth.onAuthStateChange.asyncMap((data) async {
-      final user = data.user;
+      final user = data.session?.user;
       if (user == null) {
         return Stream.value(null);
       }
