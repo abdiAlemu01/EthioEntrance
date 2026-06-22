@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:math';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
 /// Local embedding service using TensorFlow Lite
@@ -38,9 +38,9 @@ class EmbeddingService {
       _interpreter = await tfl.Interpreter.fromAsset('models/embedding_model.tflite');
       
       _isInitialized = true;
-      print('Embedding service initialized successfully');
+      // Successfully initialized
     } catch (e) {
-      print('Failed to initialize embedding service: $e');
+      // Failed to initialize - will use fallback
       // For development, we'll create a fallback
       _isInitialized = true;
     }
@@ -75,7 +75,7 @@ class EmbeddingService {
       // Return the embedding
       return output[0];
     } catch (e) {
-      print('Embedding generation failed, using fallback: $e');
+      // Embedding generation failed, using fallback
       return _fallbackEmbedding(text);
     }
   }
@@ -101,7 +101,7 @@ class EmbeddingService {
   /// 
   /// This is a simplified tokenization. In production, you would use
   /// a proper tokenizer (e.g., from transformers library).
-  List<List<List<int>>> _prepareInput(String text) {
+  List<List<int>> _prepareInput(String text) {
     // Simplified tokenization - in production, use proper tokenizer
     final tokens = _simpleTokenize(text);
     
@@ -164,7 +164,7 @@ class EmbeddingService {
     for (final value in vector) {
       sum += value * value;
     }
-    return sum.sqrt();
+    return sqrt(sum);
   }
 
   /// Calculate cosine similarity between two embeddings
@@ -183,7 +183,7 @@ class EmbeddingService {
 
     if (normA == 0 || normB == 0) return 0.0;
 
-    return dotProduct / (normA.sqrt() * normB.sqrt());
+    return dotProduct / (sqrt(normA) * sqrt(normB));
   }
 
   /// Check if service is initialized

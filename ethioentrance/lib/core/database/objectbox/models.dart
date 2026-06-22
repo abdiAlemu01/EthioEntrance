@@ -43,7 +43,7 @@ class TextbookChunk {
   
   String chunkText;
   int chunkIndex;
-   @Property(type :  PropertyType.doubleVector)
+  @Property(type: PropertyType.floatVector)
   List<double> embedding;
   
   final textbook = ToOne<Textbook>();

@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:objectbox/objectbox.dart';
-import 'models.dart';
 import '../../../objectbox.g.dart';
+import 'models.dart';
 
 /// ObjectBox database service for local data storage with vector search capabilities
 /// 
@@ -102,7 +100,7 @@ class ObjectBoxService {
   /// Get chunks for a specific textbook
   List<TextbookChunk> getTextbookChunks(int textbookId) {
     return textbookChunkBox
-        .query(TextbookChunk_.textbook.id.equals(textbookId))
+        .query(TextbookChunk_.textbook.equals(textbookId))
         .build()
         .find();
   }

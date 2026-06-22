@@ -43,6 +43,7 @@ dependencies:
   pdf: ^3.10.8
   flutter_pdfview: ^1.3.2
   path_provider: ^2.1.1
+  path: ^1.9.0
   
   # ObjectBox for local database with vector search
   objectbox: ^2.5.0
@@ -51,7 +52,7 @@ dependencies:
   # Local AI models
   # Note: These packages may need to be adjusted based on actual Flutter ML packages available
   # For local inference, we'll use tflite_flutter
-  tflite_flutter: ^0.10.4
+  tflite_flutter: ^0.11.0
   
   # PDF text extraction
   syncfusion_flutter_pdf: ^24.1.41

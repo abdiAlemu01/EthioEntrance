@@ -18,8 +18,8 @@ void main() async {
   // Replace these with your actual Supabase project credentials
   // Get these from: https://supabase.com/dashboard
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: 'https://beyhbbqdjzalfsrhjjlw.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJleWhiYnFkanphbGZzcmhqamx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzMwMjIsImV4cCI6MjA5NzE0OTAyMn0.nPU2bMR2xPKK0-PK6W3Wt3xOxXoqY-ySsXgYghHmh6o',
   );
 
   runApp(const ProviderScope(child: MyApp()));
