@@ -53,42 +53,74 @@ class _HomePage extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex],
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            )
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF9C27B0), // Purple
+              Color(0xFF673AB7), // Deep Purple
+              Color(0xFF3F51B5), // Indigo
+              Color(0xFF2196F3), // Blue
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom AppBar
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Text(
+                      _titles[_selectedIndex],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-
-
-        backgroundColor: Colors.green,
-        // make the app bar curved at the bottom
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(5)),
+              Expanded(
+                child: _pages[_selectedIndex],
+              ),
+            ],
+          ),
         ),
       ),
-      body: _pages[_selectedIndex],
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color.fromARGB(255, 148, 99, 157),
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'Courses'),
-          BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Exams'),
-          BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'Ask AI'),
-          
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-
-       
-          
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xFF9C27B0),
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.menu_book),label: 'Courses'),
+            BottomNavigationBarItem(icon: Icon(Icons.assignment), label: 'Exams'),
+            BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'Ask AI'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
       ),
     );
   }
@@ -133,54 +165,86 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // 2x2 grid: (Courses, Ask AI) / (National Exam, Team)
+            // 2x2 grid: (Courses, Ask AI) / (National Exam, Exam)
             Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: HomeCard(
-                            title: 'Courses',
-                            subtitle: 'PDF courses by grade',
-                            icon: Icons.menu_book_rounded,
-                            accentColor: Colors.green,
-                            onTap: onOpenCourses,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: (MediaQuery.of(context).size.height - 200) / 3,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: HomeCard(
+                              title: 'Courses',
+                              subtitle: 'PDF courses by grade',
+                              icon: Icons.menu_book_rounded,
+                              accentColor: Colors.green,
+                              onTap: onOpenCourses,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: HomeCard(
-                            title: 'Ask AI',
-                            subtitle: 'Get instant help',
-                            icon: Icons.smart_toy_rounded,
-                            accentColor: Colors.deepPurple,
-                            onTap: onOpenAskAi,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: HomeCard(
+                              title: 'Ask AI',
+                              subtitle: 'Get instant help',
+                              icon: Icons.smart_toy_rounded,
+                              accentColor: Colors.deepPurple,
+                              onTap: onOpenAskAi,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: HomeCard(
-                            title: 'National Exam',
-                            subtitle: 'Practice and prepare',
-                            icon: Icons.assignment_rounded,
-                            accentColor: Colors.orange,
-                            onTap: onOpenNationalExam,
+
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: (MediaQuery.of(context).size.height - 200) / 3,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: HomeCard(
+                              title: 'National Exam',
+                              subtitle: 'Practice and prepare',
+                              icon: Icons.assignment_rounded,
+                              accentColor: Colors.orange,
+                              onTap: onOpenNationalExam,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: HomeCard(
+                              title: 'Exam',
+                              subtitle: 'Practice and prepare yourself',
+                              icon: Icons.quiz_rounded,
+                              accentColor: Colors.orange,
+                              onTap: onOpenNationalExam,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: (MediaQuery.of(context).size.height - 200) / 3,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: HomeCard(
+                              title: 'Personal Development',
+                              subtitle: 'Build your righ personality daily',
+                              icon: Icons.trending_up_rounded,
+                              accentColor: Colors.teal,
+                              onTap: onOpenNationalExam,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

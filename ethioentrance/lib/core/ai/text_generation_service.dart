@@ -1,3 +1,6 @@
+//text_generation_service.dart 
+
+
 import 'package:injectable/injectable.dart';
 
 /// Local text generation service using Qwen (or similar local LLM)
@@ -26,7 +29,7 @@ class TextGenerationService {
   
   // Model parameters
   static const int _maxContextLength = 2048;
-  static const double _temperature = 0.7;
+  static const double _temperature = 0.3;
   static const int _maxTokens = 512;
 
   /// Initialize the text generation service
@@ -116,8 +119,9 @@ YOUR ANSWER:
 ''';
   }
 
-  /// Generate response from prompt
-  /// 
+
+
+  /// Generate response from prompt 
   /// This is a simplified implementation. In production, this would
   /// use actual model inference via TensorFlow Lite.
   Future<String> _generateResponse(String prompt) async {

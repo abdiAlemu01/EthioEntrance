@@ -1,3 +1,6 @@
+// embedding_service.dart
+
+
 import 'dart:math';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 
@@ -15,6 +18,7 @@ import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 /// Future Enhancement:
 /// - Can be adapted to use EmbeddingGemma when Flutter support is available
 /// - Supports model switching based on device capabilities
+
 class EmbeddingService {
   tfl.Interpreter? _interpreter;
   bool _isInitialized = false;

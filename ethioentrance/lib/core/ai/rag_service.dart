@@ -1,11 +1,12 @@
+// rag_service.dart
+
 import 'package:injectable/injectable.dart';
 import '../database/objectbox/objectbox_service.dart';
 import '../database/objectbox/models.dart';
 import 'embedding_service.dart';
 import 'text_generation_service.dart';
 
-/// Offline RAG (Retrieval-Augmented Generation) Service
-/// 
+/// Offline RAG (Retrieval-Augmented Generation) Service 
 /// This service implements the complete RAG workflow:
 /// 
 /// Step 1: Student asks a question
@@ -145,7 +146,7 @@ class RagService {
   }) async {
     final textbook = _objectBoxService.getTextbook(textbookId);
     if (textbook == null) {
-      throw Exception('Textbook not found');
+      throw Exception('No relevant information found in the textbook!');
     }
 
     // Generate embeddings for all chunks

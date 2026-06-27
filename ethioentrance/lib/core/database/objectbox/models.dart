@@ -1,3 +1,5 @@
+//model.dart
+
 import 'package:objectbox/objectbox.dart';
 
 /// Entity for storing textbook information locally

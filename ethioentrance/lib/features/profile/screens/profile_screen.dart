@@ -70,13 +70,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     if (profile == null) {
+      final isUserLoggedIn = hasAuthenticatedUser;
       return _ProfileEmptyState(
         message:
             state.errorMessage ??
             'No profile information is available right now.',
         isLoading: state.isLoading,
         onRetry: () => ref.read(profileProvider.notifier).refreshProfile(),
-        onLogin: () => context.go('/login'),
+        onLogin: isUserLoggedIn 
+            ? () async {
+                await ref.read(profileProvider.notifier).logout();
+              }
+            : () => context.go('/login'),
+        isLoggedIn: isUserLoggedIn,
       );
     }
 
@@ -124,7 +130,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const _ProfileInfoTile(
                 icon: Icons.support_agent_outlined,
                 label: 'Support contact',
-                value: 'Phone: 0901756305',
+                value: 'Phone: 0901756305 /0777835554',
+                
               ),
               const Divider(height: 1),
               const _ProfileInfoTile(
@@ -136,22 +143,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          OutlinedButton.icon(
-            onPressed: state.isLoading ? null : _confirmAndLogout,
-            icon: state.isLoading
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.logout_rounded),
-            label: Text(state.isLoading ? 'Signing out...' : 'Logout'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red.shade700,
-              side: BorderSide(color: Colors.red.shade200),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: state.isLoading ? null : _confirmAndLogout,
+              icon: state.isLoading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.logout_rounded),
+              label: Text(state.isLoading ? 'Signing out...' : 'Logout'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),
@@ -409,12 +422,14 @@ class _ProfileEmptyState extends StatelessWidget {
     required this.isLoading,
     required this.onRetry,
     required this.onLogin,
+    required this.isLoggedIn,
   });
 
   final String message;
   final bool isLoading;
   final VoidCallback onRetry;
   final VoidCallback onLogin;
+  final bool isLoggedIn;
 
   @override
   Widget build(BuildContext context) {
@@ -471,8 +486,8 @@ class _ProfileEmptyState extends StatelessWidget {
                   ),
                   OutlinedButton.icon(
                     onPressed: isLoading ? null : onLogin,
-                    icon: const Icon(Icons.login_rounded),
-                    label: const Text('Go to login'),
+                    icon: Icon(isLoggedIn ? Icons.logout_rounded : Icons.login_rounded),
+                    label: Text(isLoggedIn ? 'Logout' : 'Go to login'),
                   ),
                 ],
               ),

@@ -1,10 +1,11 @@
+// objectbox_service.dart
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../../objectbox.g.dart';
 import 'models.dart';
 
-/// ObjectBox database service for local data storage with vector search capabilities
-/// 
+/// ObjectBox database service for local data storage with vector search capabilities 
 /// This service manages:
 /// - Local database initialization
 /// - CRUD operations for all entities
@@ -196,7 +197,9 @@ class ObjectBoxService {
     return textbookChunkBox.count();
   }
 
+
   // ==================== SUBJECT OPERATIONS ====================
+
 
   /// Insert or update a subject
   int insertSubject(Subject subject) {
