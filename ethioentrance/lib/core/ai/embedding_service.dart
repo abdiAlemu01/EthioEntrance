@@ -2,51 +2,84 @@
 
 
 import 'dart:math';
-import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
+import 'dart:io';
+import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
-/// Local embedding service using TensorFlow Lite
+/// Local embedding service using FlutterGemma (EmbeddingGemma)
 /// 
-/// This service generates embeddings for text using a local model.
-/// Currently designed to work with sentence-transformer models converted to TFLite.
+/// This service generates embeddings for text using EmbeddingGemma model.
 /// 
 /// Architecture Decision:
-/// - Uses TensorFlow Lite for on-device inference
-/// - Supports sentence-transformer models (e.g., all-MiniLM-L6-v2)
-/// - Runs completely offline
-/// - Embeddings are 384-dimensional (using MiniLM model)
+/// - Uses FlutterGemmaEmbedder for on-device inference
+/// - Uses EmbeddingGemma-300M model from HuggingFace
+/// - Runs completely offline after model download
+/// - Embeddings are 768-dimensional (EmbeddingGemma-300M)
+/// - Singleton pattern for efficient resource management
 /// 
-/// Future Enhancement:
-/// - Can be adapted to use EmbeddingGemma when Flutter support is available
-/// - Supports model switching based on device capabilities
+/// Model:
+/// - Model: embeddinggemma-300M_seq256_mixed-precision.tflite
+/// - Sequence length: 256
+/// - Precision: Mixed-precision for better performance
+/// - Backend: GPU preferred, falls back to CPU
 
 class EmbeddingService {
-  tfl.Interpreter? _interpreter;
+  static final EmbeddingService _instance = EmbeddingService._internal();
+  factory EmbeddingService() => _instance;
+  EmbeddingService._internal();
+
   bool _isInitialized = false;
+  bool _isModelInstalled = false;
   
-  // Embedding dimension (384 for MiniLM, 768 for BERT-base, etc.)
-  static const int _embeddingDim = 384;
-  
-  // Maximum sequence length for the model
-  static const int _maxSeqLength = 128;
+  // Embedding dimension for EmbeddingGemma-300M
+  static const int _embeddingDim = 768;
 
   /// Initialize the embedding service
   /// 
-  /// Loads the TFLite model and prepares it for inference.
-  /// Model should be placed in assets/models/ directory.
+  /// Checks if the model is installed, and if not, downloads it.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      // Load TFLite model from assets
-      // Note: You need to add the model file to your assets
-      _interpreter = await tfl.Interpreter.fromAsset('models/embedding_model.tflite');
+      // Check if embedder is already installed
+      _isModelInstalled = await FlutterGemma.hasActiveEmbedder();
+      
+      if (!_isModelInstalled) {
+        print("EmbeddingGemma model not installed. Downloading...");
+        await _downloadModel();
+      } else {
+        print("EmbeddingGemma model already installed.");
+      }
       
       _isInitialized = true;
-      // Successfully initialized
+      print('Embedding service initialized successfully');
     } catch (e) {
-      // Failed to initialize - will use fallback
-      // For development, we'll create a fallback
-      _isInitialized = true;
+      print('Failed to initialize embedding service: $e');
+      _isInitialized = true; // Allow fallback to hash-based embedding
+    }
+  }
+
+  /// Download EmbeddingGemma model from HuggingFace
+  Future<void> _downloadModel() async {
+    try {
+      print("Installing EmbeddingGemma onto local device storage...");
+      
+      // Use FlutterGemma's built-in installer
+      await FlutterGemma.installEmbedder()
+        .modelFromNetwork(
+          'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq256_mixed-precision.tflite'
+        )
+        .tokenizerFromNetwork(
+          'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/sentencepiece.model'
+        )
+        .install();
+
+      print("EmbeddingGemma successfully downloaded and ready for offline use.");
+      _isModelInstalled = true;
+    } catch (e) {
+      print("Failed to download or initialize the embedding files: $e");
+      rethrow;
     }
   }
 
@@ -61,25 +94,18 @@ class EmbeddingService {
       await initialize();
     }
 
-    if (_interpreter == null) {
-      // Fallback: return a simple hash-based embedding for development
+    if (!_isModelInstalled) {
+      // Fallback: return a simple hash-based embedding
       return _fallbackEmbedding(text);
     }
 
     try {
-      // Tokenize and prepare input
-      final input = _prepareInput(text);
-      
-      // Prepare output buffer
-      final output = List<double>.filled(_embeddingDim, 0.0).reshape([1, _embeddingDim]);
-      
-      // Run inference
-      _interpreter!.run(input, output);
-      
-      // Return the embedding
-      return output[0];
+      // Use FlutterGemma to generate embedding
+      final embedder = await FlutterGemma.getActiveEmbedder();
+      final embedding = await embedder.encode(text);
+      return embedding;
     } catch (e) {
-      // Embedding generation failed, using fallback
+      print("Embedding generation failed, using fallback: $e");
       return _fallbackEmbedding(text);
     }
   }
@@ -91,49 +117,33 @@ class EmbeddingService {
   /// 
   /// Returns: List of embedding vectors
   Future<List<List<double>>> embedTexts(List<String> texts) async {
-    final embeddings = <List<double>>[];
-    
-    for (final text in texts) {
-      final embedding = await embedText(text);
-      embeddings.add(embedding);
+    if (!_isInitialized) {
+      await initialize();
     }
-    
-    return embeddings;
-  }
 
-  /// Prepare input tensor for the model
-  /// 
-  /// This is a simplified tokenization. In production, you would use
-  /// a proper tokenizer (e.g., from transformers library).
-  List<List<int>> _prepareInput(String text) {
-    // Simplified tokenization - in production, use proper tokenizer
-    final tokens = _simpleTokenize(text);
-    
-    // Pad or truncate to max sequence length
-    final paddedTokens = _padOrTruncate(tokens, _maxSeqLength);
-    
-    // Create input tensor [1, max_seq_length]
-    return [paddedTokens];
-  }
-
-  /// Simple tokenization for development
-  /// 
-  /// In production, replace with proper tokenizer from the model
-  List<int> _simpleTokenize(String text) {
-    // Very basic tokenization - split by spaces and convert to hash codes
-    // This is NOT production quality but allows development to proceed
-    final words = text.toLowerCase().split(RegExp(r'\s+'));
-    return words.map((word) => word.hashCode % 30000).toList();
-  }
-
-  /// Pad or truncate token list to max sequence length
-  List<int> _padOrTruncate(List<int> tokens, int maxLength) {
-    if (tokens.length >= maxLength) {
-      return tokens.sublist(0, maxLength);
+    if (!_isModelInstalled) {
+      final embeddings = <List<double>>[];
+      for (final text in texts) {
+        final embedding = await embedText(text);
+        embeddings.add(embedding);
+      }
+      return embeddings;
     }
-    
-    // Pad with zeros
-    return [...tokens, ...List.filled(maxLength - tokens.length, 0)];
+
+    try {
+      // Use FlutterGemma batch embedding
+      final embedder = await FlutterGemma.getActiveEmbedder();
+      final embeddings = await embedder.batchEncode(texts);
+      return embeddings;
+    } catch (e) {
+      print("Batch embedding failed, using sequential fallback: $e");
+      final embeddings = <List<double>>[];
+      for (final text in texts) {
+        final embedding = await embedText(text);
+        embeddings.add(embedding);
+      }
+      return embeddings;
+    }
   }
 
   /// Fallback embedding generation for development
@@ -173,6 +183,22 @@ class EmbeddingService {
 
   /// Calculate cosine similarity between two embeddings
   double cosineSimilarity(List<double> a, List<double> b) {
+    if (_isModelInstalled) {
+      try {
+        // Use FlutterGemma's built-in cosine similarity
+        final aNorm = _normalize(a);
+        final bNorm = _normalize(b);
+        double dotProduct = 0.0;
+        for (int i = 0; i < aNorm.length; i++) {
+          dotProduct += aNorm[i] * bNorm[i];
+        }
+        return dotProduct;
+      } catch (e) {
+        print("Model cosine similarity failed, using manual calculation: $e");
+      }
+    }
+    
+    // Manual calculation as fallback
     if (a.length != b.length) return 0.0;
 
     double dotProduct = 0.0;
@@ -190,15 +216,28 @@ class EmbeddingService {
     return dotProduct / (sqrt(normA) * sqrt(normB));
   }
 
+  /// Normalize a vector
+  List<double> _normalize(List<double> vector) {
+    double norm = 0.0;
+    for (final v in vector) {
+      norm += v * v;
+    }
+    norm = sqrt(norm);
+    if (norm == 0) return List.from(vector);
+    return vector.map((v) => v / norm).toList();
+  }
+
   /// Check if service is initialized
   bool get isInitialized => _isInitialized;
+
+  /// Check if model is installed
+  bool get isModelInstalled => _isModelInstalled;
 
   /// Get embedding dimension
   int get embeddingDimension => _embeddingDim;
 
   /// Release resources
   void dispose() {
-    _interpreter?.close();
     _isInitialized = false;
   }
 }

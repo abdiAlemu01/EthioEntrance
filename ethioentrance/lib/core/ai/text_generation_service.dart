@@ -2,54 +2,116 @@
 
 
 import 'package:injectable/injectable.dart';
+import 'package:flutter_gemma/flutter_gemma.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'dart:io';
 
-/// Local text generation service using Qwen (or similar local LLM)
+/// Local text generation service using Qwen3 with FlutterGemma
 /// 
-/// This service generates text responses using a local model.
-/// Currently designed to work with TFLite-converted LLM models.
+/// This service generates text responses using Qwen3 model.
 /// 
 /// Architecture Decision:
-/// - Uses TensorFlow Lite for on-device inference
-/// - Supports Qwen models converted to TFLite format
-/// - Runs completely offline
+/// - Uses FlutterGemma for on-device inference
+/// - Uses Qwen3-0.5B-Instruct model from HuggingFace
+/// - Runs completely offline after model download
 /// - Implements RAG-aware generation (uses retrieved context)
+/// - Singleton pattern for efficient resource management
 /// 
 /// Important Rule:
 /// The AI should not hallucinate. If the answer is not found in 
 /// retrieved content, respond: "I could not find that information 
 /// in the provided learning materials."
 /// 
-/// Future Enhancement:
-/// - Can be adapted to use Qwen when Flutter support is available
-/// - Supports model switching based on device capabilities
-/// - Implements streaming responses for better UX
+/// Model:
+/// - Model: Qwen3-0.5B-Instruct in .litertlm format
+/// - Size: 0.5B parameters (lightweight for mobile)
+/// - Type: Instruction-tuned for chat/qa
 @injectable
 class TextGenerationService {
+  static final TextGenerationService _instance = TextGenerationService._internal();
+  factory TextGenerationService() => _instance;
+  TextGenerationService._internal();
+
   bool _isInitialized = false;
+  bool _isModelInstalled = false;
+  InferenceModel? _model;
+  InferenceSession? _session;
   
   // Model parameters
   static const int _maxContextLength = 2048;
   static const double _temperature = 0.3;
   static const int _maxTokens = 512;
+  
+  // Model filename
+  static const String _modelName = 'model.litertlm';
 
   /// Initialize the text generation service
   /// 
-  /// Loads the TFLite model and prepares it for inference.
-  /// Model should be placed in assets/models/ directory.
+  /// Checks if the model is installed, and if not, downloads it.
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
-      // Load TFLite model from assets
-      // Note: You need to add the model file to your assets
-      // For now, we'll use a rule-based fallback
+      // Check if model is already installed
+      _isModelInstalled = await FlutterGemma.isModelInstalled('qwen3-0.5b-instruct');
+      
+      if (!_isModelInstalled) {
+        print("Qwen3 model not installed. Downloading...");
+        await _downloadModel();
+      } else {
+        print("Qwen3 model already installed.");
+      }
+      
+      // Get the active model
+      _model = await FlutterGemma.getActiveModel(
+        maxTokens: _maxTokens,
+        preferredBackend: PreferredBackend.gpu,
+      );
+      
+      // Create a session for inference
+      _session = await _model!.createSession();
       
       _isInitialized = true;
       print('Text generation service initialized successfully');
     } catch (e) {
-      print('Failed to initialize text generation service: $e');
-      // For development, we'll use a rule-based fallback
-      _isInitialized = true;
+      print('Failed to initialize text generation service with GPU, trying CPU: $e');
+      try {
+        // Fallback to CPU backend
+        _model = await FlutterGemma.getActiveModel(
+          maxTokens: _maxTokens,
+          preferredBackend: PreferredBackend.cpu,
+        );
+        
+        _session = await _model!.createSession();
+        
+        _isInitialized = true;
+        print('Text generation service initialized successfully with CPU backend');
+      } catch (e2) {
+        print('Failed to initialize text generation service: $e2');
+        _isInitialized = true; // Allow fallback to rule-based response
+      }
+    }
+  }
+
+  /// Download Qwen3 model from HuggingFace
+  Future<void> _downloadModel() async {
+    try {
+      print("Downloading Qwen3 local model layers...");
+      
+      // Download and install the .litertlm format of the Qwen model
+      await FlutterGemma.installModel(
+        modelType: ModelType.qwen3_0_5b_instruct,
+        fileType: ModelFileType.litertlm,
+      ).fromNetwork(
+        'https://huggingface.co/litert-community/Qwen3-0.5B-Instruct-litertlm/resolve/main/model.litertlm'
+      ).install();
+        
+      print("Qwen3 is fully initialized and operational completely offline.");
+      _isModelInstalled = true;
+    } catch (e) {
+      print("Error setting up Qwen3: $e");
+      rethrow;
     }
   }
 
@@ -82,7 +144,16 @@ class TextGenerationService {
     final prompt = _buildRAGPrompt(question, contextText, grade);
 
     // Generate response
-    return await _generateResponse(prompt);
+    if (_session != null) {
+      try {
+        return await _generateWithModel(prompt);
+      } catch (e) {
+        print("Model generation failed, using fallback: $e");
+        return _ruleBasedResponse(prompt);
+      }
+    } else {
+      return _ruleBasedResponse(prompt);
+    }
   }
 
   /// Build RAG prompt with context
@@ -119,16 +190,26 @@ YOUR ANSWER:
 ''';
   }
 
-
-
-  /// Generate response from prompt 
-  /// This is a simplified implementation. In production, this would
-  /// use actual model inference via TensorFlow Lite.
-  Future<String> _generateResponse(String prompt) async {
-    // For now, use a rule-based approach
-    // In production, replace with actual TFLite model inference
-    
-    return _ruleBasedResponse(prompt);
+  /// Generate response using Qwen3 model
+  Future<String> _generateWithModel(String prompt) async {
+    try {
+      // Add the prompt to the session
+      _session!.addQueryChunk(Message(text: prompt, isUser: true));
+      
+      // Generate response
+      final response = await _session!.getResponse();
+      
+      // Check if response is TextResponse
+      if (response is TextResponse) {
+        return (response as TextResponse).token;
+      } else {
+        print("Unexpected response type: ${response.runtimeType}");
+        return _ruleBasedResponse(prompt);
+      }
+    } catch (e) {
+      print("Error generating response with model: $e");
+      rethrow;
+    }
   }
 
   /// Rule-based response generation (fallback for development)
@@ -192,14 +273,29 @@ This information comes from your textbooks. Would you like me to explain any par
       await initialize();
     }
 
-    return await _generateResponse(prompt);
+    if (_session != null) {
+      try {
+        return await _generateWithModel(prompt);
+      } catch (e) {
+        print("Model generation failed, using fallback: $e");
+        return _ruleBasedResponse(prompt);
+      }
+    } else {
+      return _ruleBasedResponse(prompt);
+    }
   }
 
   /// Check if service is initialized
   bool get isInitialized => _isInitialized;
 
+  /// Check if model is installed
+  bool get isModelInstalled => _isModelInstalled;
+
   /// Release resources
   void dispose() {
+    _session?.dispose();
+    _session = null;
+    _model = null;
     _isInitialized = false;
   }
 }

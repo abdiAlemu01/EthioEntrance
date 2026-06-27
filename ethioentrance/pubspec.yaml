@@ -44,6 +44,9 @@ dependencies:
   flutter_pdfview: ^1.3.2
   path_provider: ^2.1.1
   path: ^1.9.0
+  # flutter_gemma: ^1.1.2            # Core package for orchestrating models (requires Flutter 3.44.4+)
+  # Temporarily commented out - requires Flutter SDK upgrade to 3.44.4+
+  # Uncomment after upgrading Flutter SDK
   
   # ObjectBox for local database with vector search
   objectbox: ^2.5.0
