@@ -1,3 +1,4 @@
+// login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,33 +12,18 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isLogin = true;
   bool _obscurePassword = true;
-  
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _isLogin = _tabController.index == 0;
-      });
-    });
-  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -68,6 +54,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Login failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your email address first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(email);
+      
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password reset email sent! Check your inbox.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send reset email: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Note: Google OAuth requires additional setup in Supabase
+      // This is a placeholder for the implementation
+      // You need to:
+      // 1. Enable Google provider in Supabase dashboard
+      // 2. Add google_sign_in package to pubspec.yaml
+      // 3. Configure OAuth credentials
+      
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google sign-in requires Supabase OAuth setup. Please use email/password for now.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google sign-in failed: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -165,31 +226,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         key: _formKey,
                         child: Column(
                           children: [
-                            // Tab Bar
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: TabBar(
-                                controller: _tabController,
-                                indicator: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF9C27B0), Color(0xFF2196F3)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                labelColor: Colors.white,
-                                unselectedLabelColor: Colors.grey.shade600,
-                                dividerColor: Colors.transparent,
-                                tabs: const [
-                                  Tab(text: 'Login'),
-                                  Tab(text: 'Sign Up'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            
                             // Email Field
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,9 +412,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             
                             // Forgot Password
                             TextButton(
-                              onPressed: () {
-                                // Handle forgot password
-                              },
+                              onPressed: _handleForgotPassword,
                               child: Text(
                                 'Forgot Password?',
                                 style: TextStyle(
@@ -414,21 +448,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                               width: double.infinity,
                               height: 50,
                               child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // Handle Google sign in
-                                },
+                                onPressed: _isLoading ? null : _handleGoogleSignIn,
                                 icon: const FaIcon(
                                   FontAwesomeIcons.google,
                                   size: 20,
                                   color: Colors.black87,
                                 ),
-                                label: const Text(
-                                  'Continue with Google',
-                                  style: TextStyle(
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                label: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Continue with Google',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                 style: OutlinedButton.styleFrom(
                                   side: BorderSide(color: Colors.grey.shade300),
                                   shape: RoundedRectangleBorder(
@@ -438,6 +478,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                               ),
                             ),
                             const SizedBox(height: 24),
+                            
+                            // Don't have account
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Don't have an account? ",
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => context.go('/signup'),
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: const Size(0, 0),
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                      color: Colors.purple.shade400,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
                             
                             // Terms and Privacy
                             Text(
