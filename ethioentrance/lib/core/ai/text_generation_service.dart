@@ -51,7 +51,7 @@ class TextGenerationService {
   bool _isInitialized = false;
   bool _isModelInstalled = false;
   InferenceModel? _model;
-  InferenceSession? _currentSession;
+  InferenceModelSession? _currentSession;
   DateTime? _lastUsed;
   
   // Model parameters (optimized for mobile)
@@ -103,9 +103,6 @@ class TextGenerationService {
         _model = await FlutterGemma.getActiveModel(
           maxTokens: _maxTokens,
           preferredBackend: PreferredBackend.gpu,
-          temperature: _temperature,
-          topP: _topP,
-          topK: _topK,
         );
         print("✓ GPU acceleration enabled");
       } catch (e) {
@@ -114,9 +111,6 @@ class TextGenerationService {
         _model = await FlutterGemma.getActiveModel(
           maxTokens: _maxTokens,
           preferredBackend: PreferredBackend.cpu,
-          temperature: _temperature,
-          topP: _topP,
-          topK: _topK,
         );
         print("✓ Using CPU backend");
       }
@@ -161,7 +155,7 @@ class TextGenerationService {
         
         // Download and install the .litertlm format of the Qwen model
         await FlutterGemma.installModel(
-          modelType: ModelType.qwen3_0_5b_instruct,
+          modelType: ModelType.qwen3,
           fileType: ModelFileType.litertlm,
         ).fromNetwork(
           'https://huggingface.co/litert-community/Qwen3-0.5B-Instruct-litertlm/resolve/main/model.litertlm'
@@ -367,19 +361,10 @@ $question<|im_end|>
       final response = await session.getResponse();
       
       // Clean up this session
-      session.dispose();
+      await session.close();
       
-      // Extract text from response
-      if (response is TextResponse) {
-        final generatedText = response.token;
-        
-        // Post-process the response
-        return _postProcessResponse(generatedText);
-      } else {
-        throw TextGenerationServiceException(
-          'Unexpected response type: ${response.runtimeType}'
-        );
-      }
+      // Post-process the response
+      return _postProcessResponse(response);
       
     } catch (e) {
       print("✗ Error generating response with model: $e");
@@ -410,20 +395,17 @@ $question<|im_end|>
       final buffer = StringBuffer();
       
       // Listen to the stream
-      session.getResponseStream().listen(
-        (response) {
-          if (response is TextResponse) {
-            final token = response.token;
-            buffer.write(token);
-            onToken(token);
-          }
+      session.getResponseAsync().listen(
+        (token) {
+          buffer.write(token);
+          onToken(token);
         },
         onDone: () {
-          session.dispose();
+          session.close();
           completer.complete(_postProcessResponse(buffer.toString()));
         },
         onError: (error) {
-          session.dispose();
+          session.close();
           completer.completeError(error);
         },
       );
@@ -463,7 +445,7 @@ $question<|im_end|>
   /// Reset the current session (for error recovery)
   Future<void> _resetSession() async {
     try {
-      _currentSession?.dispose();
+      await _currentSession?.close();
       _currentSession = await _model!.createSession();
       print("✓ Session reset successful");
     } catch (e) {
@@ -554,7 +536,7 @@ $question<|im_end|>
     print("🧹 Disposing text generation service resources");
     
     // Dispose current session
-    _currentSession?.dispose();
+    await _currentSession?.close();
     _currentSession = null;
     
     // Release model

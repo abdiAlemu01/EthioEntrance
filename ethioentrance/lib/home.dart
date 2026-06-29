@@ -144,111 +144,103 @@ class _HomeDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome back!',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Welcome back!',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Start from here your learning journey today.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 2x2 grid: (Courses, Ask AI) / (National Exam, Exam)
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HomeCard(
+                          title: 'Courses',
+                          subtitle: 'PDF courses by grade',
+                          icon: Icons.menu_book_rounded,
+                          accentColor: Colors.green,
+                          onTap: onOpenCourses,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: HomeCard(
+                          title: 'Ask AI',
+                          subtitle: 'Get instant help',
+                          icon: Icons.smart_toy_rounded,
+                          accentColor: Colors.deepPurple,
+                          onTap: onOpenAskAi,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HomeCard(
+                          title: 'National Exam',
+                          subtitle: 'Practice and prepare',
+                          icon: Icons.assignment_rounded,
+                          accentColor: Colors.orange,
+                          onTap: onOpenNationalExam,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: HomeCard(
+                          title: 'Exam',
+                          subtitle: 'Practice and prepare yourself',
+                          icon: Icons.quiz_rounded,
+                          accentColor: Colors.orange,
+                          onTap: onOpenNationalExam,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HomeCard(
+                          title: 'Personal Development',
+                          subtitle: 'Build your right personality daily',
+                          icon: Icons.trending_up_rounded,
+                          accentColor: Colors.teal,
+                          onTap: onOpenNationalExam,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Container()), // Empty space for balance
+                    ],
+                  ),
+                  const SizedBox(height: 16), // Extra bottom padding
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              ' Start from here your learning journey today.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 2x2 grid: (Courses, Ask AI) / (National Exam, Exam)
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: (MediaQuery.of(context).size.height - 200) / 3,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: HomeCard(
-                              title: 'Courses',
-                              subtitle: 'PDF courses by grade',
-                              icon: Icons.menu_book_rounded,
-                              accentColor: Colors.green,
-                              onTap: onOpenCourses,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: HomeCard(
-                              title: 'Ask AI',
-                              subtitle: 'Get instant help',
-                              icon: Icons.smart_toy_rounded,
-                              accentColor: Colors.deepPurple,
-                              onTap: onOpenAskAi,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: (MediaQuery.of(context).size.height - 200) / 3,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: HomeCard(
-                              title: 'National Exam',
-                              subtitle: 'Practice and prepare',
-                              icon: Icons.assignment_rounded,
-                              accentColor: Colors.orange,
-                              onTap: onOpenNationalExam,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: HomeCard(
-                              title: 'Exam',
-                              subtitle: 'Practice and prepare yourself',
-                              icon: Icons.quiz_rounded,
-                              accentColor: Colors.orange,
-                              onTap: onOpenNationalExam,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: (MediaQuery.of(context).size.height - 200) / 3,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: HomeCard(
-                              title: 'Personal Development',
-                              subtitle: 'Build your righ personality daily',
-                              icon: Icons.trending_up_rounded,
-                              accentColor: Colors.teal,
-                              onTap: onOpenNationalExam,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

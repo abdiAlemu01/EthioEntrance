@@ -9,9 +9,6 @@ import 'core/database/objectbox/objectbox_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize ObjectBox database
-  await ObjectBoxService.init();
-
   // Initialize Supabase for authentication only
   // Replace these with your actual Supabase project credentials
   // Get these from: https://supabase.com/dashboard
@@ -19,6 +16,14 @@ void main() async {
     url: 'https://beyhbbqdjzalfsrhjjlw.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJleWhiYnFkanphbGZzcmhqamx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzMwMjIsImV4cCI6MjA5NzE0OTAyMn0.nPU2bMR2xPKK0-PK6W3Wt3xOxXoqY-ySsXgYghHmh6o',
   );
+
+  // Initialize ObjectBox database (with error handling)
+  try {
+    await ObjectBoxService.init();
+  } catch (e) {
+    print('Warning: ObjectBox initialization failed: $e');
+    print('App will continue without local database functionality');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }

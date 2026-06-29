@@ -43,7 +43,7 @@ class EmbeddingService {
 
   bool _isInitialized = false;
   bool _isModelInstalled = false;
-  FlutterGemmaEmbedder? _embedder;
+  EmbeddingModel? _embedder;
   DateTime? _lastUsed;
   
   // Embedding dimension for EmbeddingGemma-300M
@@ -116,16 +116,14 @@ class EmbeddingService {
         }
         
         // Use FlutterGemma's built-in installer with progress tracking
-        final installer = FlutterGemma.installEmbedder()
+        await FlutterGemma.installEmbedder()
           .modelFromNetwork(
             'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq256_mixed-precision.tflite'
           )
           .tokenizerFromNetwork(
             'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/sentencepiece.model'
-          );
-        
-        // Install with progress tracking
-        await installer.install();
+          )
+          .install();
         
         if (onProgress != null) {
           onProgress(1.0);
@@ -191,7 +189,7 @@ class EmbeddingService {
       _lastUsed = DateTime.now();
       
       // Generate embedding using the cached embedder instance
-      final embedding = await _embedder!.encode(processedText);
+      final embedding = await _embedder!.generateEmbedding(processedText, taskType: TaskType.retrievalQuery);
       
       // Validate embedding dimension
       if (embedding.length != _embeddingDim) {
@@ -258,7 +256,7 @@ class EmbeddingService {
         _lastUsed = DateTime.now();
         
         // Generate embeddings for this batch
-        final batchEmbeddings = await _embedder!.batchEncode(processedBatch);
+        final batchEmbeddings = await _embedder!.generateEmbeddings(processedBatch, taskType: TaskType.retrievalQuery);
         
         // Validate embeddings
         for (final embedding in batchEmbeddings) {

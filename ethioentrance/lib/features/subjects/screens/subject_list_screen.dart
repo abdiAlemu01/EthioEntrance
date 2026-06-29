@@ -66,7 +66,7 @@ class _SubjectScreenState extends ConsumerState<SubjectScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                      FilePickerResult? result = await FilePicker.pickFiles(
                         type: FileType.custom,
                         allowedExtensions: ['pdf'],
                       );
@@ -83,7 +83,7 @@ class _SubjectScreenState extends ConsumerState<SubjectScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      FilePickerResult? result = await FilePicker.platform.pickFiles(
+                      FilePickerResult? result = await FilePicker.pickFiles(
                         type: FileType.video,
                       );
                       if (result != null && result.files.single.bytes != null) {

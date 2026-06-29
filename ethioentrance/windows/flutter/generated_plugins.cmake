@@ -6,13 +6,13 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
   file_selector_windows
+  flutter_gemma
   objectbox_flutter_libs
   rive_common
   url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  tflite_flutter
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

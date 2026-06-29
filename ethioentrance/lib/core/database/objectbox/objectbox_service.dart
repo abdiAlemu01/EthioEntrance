@@ -1,5 +1,6 @@
 // objectbox_service.dart
 
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../../../objectbox.g.dart';
@@ -38,13 +39,21 @@ class ObjectBoxService {
   static Future<ObjectBoxService> init() async {
     if (_instance != null) return _instance!;
 
-    final docsDir = await getApplicationDocumentsDirectory();
-    final store = await openStore(
-      directory: p.join(docsDir.path, 'objectbox'),
-    );
+    try {
+      // Ensure WidgetsBinding is initialized before accessing platform channels
+      WidgetsFlutterBinding.ensureInitialized();
+      
+      final docsDir = await getApplicationDocumentsDirectory();
+      final store = await openStore(
+        directory: p.join(docsDir.path, 'objectbox'),
+      );
 
-    _instance = ObjectBoxService._create(store);
-    return _instance!;
+      _instance = ObjectBoxService._create(store);
+      return _instance!;
+    } catch (e) {
+      print('Error initializing ObjectBox: $e');
+      rethrow;
+    }
   }
 
   /// Get singleton instance
