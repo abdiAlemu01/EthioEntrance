@@ -13,20 +13,26 @@ final GoRouter router = GoRouter(
   refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
 
   redirect: (context, state) {
+    print('🧭 Router redirect: checking auth state');
     final loggedIn = Supabase.instance.client.auth.currentSession != null;
     final location = state.matchedLocation;
     final loggingIn = location == '/login';
     final signingUp = location == '/signup';
+
+    print('  - loggedIn: $loggedIn');
+    print('  - location: $location');
 
     if (location == '/') {
       return loggedIn ? '/home' : '/login';
     }
 
     if (!loggedIn && !(loggingIn || signingUp)) {
+      print('  → Redirecting to /login');
       return '/login';
     }
 
     if (loggedIn && (loggingIn || signingUp)) {
+      print('  → Redirecting to /home');
       return '/home';
     }
 

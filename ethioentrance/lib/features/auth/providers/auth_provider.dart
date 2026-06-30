@@ -15,18 +15,26 @@ class AuthNotifier extends StateNotifier<List<UserFirebase>> {
   final AuthService _authService;
 
   AuthNotifier(this._authService) : super([]) {
+    print('🔐 AuthNotifier initialized');
     _init();
   }
 
   // listen for authentication changes
   void _init() {
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      if (data.session?.user != null) {
-        _addUserFromAuth(data.session!.user);
-      } else {
-        state = [];
-      }
-    });
+    print('👂 Setting up auth state listener...');
+    try {
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        print('🔄 Auth state changed: ${data.event}');
+        if (data.session?.user != null) {
+          _addUserFromAuth(data.session!.user);
+        } else {
+          state = [];
+        }
+      });
+      print('✓ Auth state listener set up successfully');
+    } catch (e) {
+      print('✗ Error setting up auth listener: $e');
+    }
   }
 
   // load user from Firestore

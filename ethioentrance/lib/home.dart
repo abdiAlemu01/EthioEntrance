@@ -144,103 +144,101 @@ class _HomeDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Welcome back!',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Start from here your learning journey today.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 2x2 grid: (Courses, Ask AI) / (National Exam, Exam)
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HomeCard(
-                          title: 'Courses',
-                          subtitle: 'PDF courses by grade',
-                          icon: Icons.menu_book_rounded,
-                          accentColor: Colors.green,
-                          onTap: onOpenCourses,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: HomeCard(
-                          title: 'Ask AI',
-                          subtitle: 'Get instant help',
-                          icon: Icons.smart_toy_rounded,
-                          accentColor: Colors.deepPurple,
-                          onTap: onOpenAskAi,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HomeCard(
-                          title: 'National Exam',
-                          subtitle: 'Practice and prepare',
-                          icon: Icons.assignment_rounded,
-                          accentColor: Colors.orange,
-                          onTap: onOpenNationalExam,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: HomeCard(
-                          title: 'Exam',
-                          subtitle: 'Practice and prepare yourself',
-                          icon: Icons.quiz_rounded,
-                          accentColor: Colors.orange,
-                          onTap: onOpenNationalExam,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: HomeCard(
-                          title: 'Personal Development',
-                          subtitle: 'Build your right personality daily',
-                          icon: Icons.trending_up_rounded,
-                          accentColor: Colors.teal,
-                          onTap: onOpenNationalExam,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(child: Container()), // Empty space for balance
-                    ],
-                  ),
-                  const SizedBox(height: 16), // Extra bottom padding
-                ],
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome back!',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              'Start from here your learning journey today.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 2x2 grid: (Courses, Ask AI) / (National Exam, Exam)
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: HomeCard(
+                        title: 'Courses',
+                        subtitle: 'PDF courses by grade',
+                        icon: Icons.menu_book_rounded,
+                        accentColor: Colors.green,
+                        onTap: onOpenCourses,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: HomeCard(
+                        title: 'Ask AI',
+                        subtitle: 'Get instant help',
+                        icon: Icons.smart_toy_rounded,
+                        accentColor: Colors.deepPurple,
+                        onTap: onOpenAskAi,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: HomeCard(
+                        title: 'National Exam',
+                        subtitle: 'Practice and prepare',
+                        icon: Icons.assignment_rounded,
+                        accentColor: Colors.orange,
+                        onTap: onOpenNationalExam,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: HomeCard(
+                        title: 'Exam',
+                        subtitle: 'Practice and prepare yourself',
+                        icon: Icons.quiz_rounded,
+                        accentColor: Colors.orange,
+                        onTap: onOpenNationalExam,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: HomeCard(
+                        title: 'Personal Development',
+                        subtitle: 'Build your right personality daily',
+                        icon: Icons.trending_up_rounded,
+                        accentColor: Colors.teal,
+                        onTap: onOpenNationalExam,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Container()), // Empty space for balance
+                  ],
+                ),
+                const SizedBox(height: 16), // Extra bottom padding
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -268,27 +266,23 @@ class HomeCard extends StatefulWidget {
 }
 
 class _HomeCardState extends State<HomeCard> {
-  bool _hovered = false;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final borderColor = _hovered ? widget.accentColor : Colors.grey.shade200;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
+    return SizedBox(
+      height: 200,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: borderColor, width: 1.2),
+          border: Border.all(color: Colors.grey.shade200, width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: _hovered ? 0.08 : 0.05),
-              blurRadius: _hovered ? 18 : 14,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 14,
               offset: const Offset(0, 10),
             ),
           ],
@@ -312,7 +306,7 @@ class _HomeCardState extends State<HomeCard> {
                     ),
                     child: Icon(widget.icon, color: widget.accentColor),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 12),
                   Text(
                     widget.title,
                     style: theme.textTheme.titleMedium?.copyWith(
