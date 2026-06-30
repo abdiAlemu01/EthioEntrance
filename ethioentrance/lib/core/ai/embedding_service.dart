@@ -43,26 +43,27 @@ class EmbeddingService {
 
   bool _isInitialized = false;
   bool _isModelInstalled = false;
+  bool _isDownloading = false; // Prevent concurrent downloads
   EmbeddingModel? _embedder;
   DateTime? _lastUsed;
-  
+
   // Embedding dimension for EmbeddingGemma-300M
   static const int _embeddingDim = 768;
   static const int _maxSequenceLength = 256;
-  
+
   // Mobile optimization parameters
   static const int _maxBatchSize = 8; // Limit batch size for memory
   static const Duration _idleTimeout = Duration(minutes: 5); // Release resources after idle
   static const int _maxRetries = 3;
 
   /// Initialize the embedding service with mobile optimizations
-  /// 
+  ///
   /// Checks if the model is installed, and if not, downloads it.
   /// Returns download progress via callback.
-  /// 
+  ///
   /// Parameters:
   /// - onProgress: Optional callback for download progress (0.0 to 1.0)
-  /// 
+  ///
   /// Throws: EmbeddingServiceException if initialization fails after retries
   Future<void> initialize({
     Function(double progress)? onProgress,
@@ -72,10 +73,22 @@ class EmbeddingService {
       return;
     }
 
+    // Wait if download is already in progress
+    if (_isDownloading) {
+      print('⏳ Model download already in progress, waiting...');
+      while (_isDownloading) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      if (_isInitialized) {
+        _lastUsed = DateTime.now();
+        return;
+      }
+    }
+
     try {
       // Check if embedder is already installed
       _isModelInstalled = await FlutterGemma.hasActiveEmbedder();
-      
+
       if (!_isModelInstalled) {
         print("EmbeddingGemma model not installed. Downloading...");
         await _downloadModel(onProgress: onProgress);
@@ -84,76 +97,86 @@ class EmbeddingService {
         // Get the active embedder
         _embedder = await FlutterGemma.getActiveEmbedder();
       }
-      
+
       _isInitialized = true;
       _lastUsed = DateTime.now();
       print('✓ Embedding service initialized successfully');
       print('✓ Model: EmbeddingGemma-300M (${_embeddingDim}d vectors)');
       print('✓ Status: Completely offline ready');
     } catch (e) {
-      print('✗ Failed to initialize embedding service: $e');
-      throw EmbeddingServiceException('Failed to initialize embedding service: $e');
+      print('⚠ Warning: Failed to initialize embedding service: $e');
+      print('⚠ AI features will be disabled');
+      // Don't throw exception - allow app to continue without AI features
+      _isInitialized = false;
     }
   }
 
   /// Download EmbeddingGemma model from HuggingFace with retry logic
-  /// 
+  ///
   /// Parameters:
   /// - onProgress: Optional callback for download progress
-  /// 
+  ///
   /// Implements exponential backoff retry strategy for network resilience
   Future<void> _downloadModel({
     Function(double progress)? onProgress,
   }) async {
+    // Set downloading flag to prevent concurrent downloads
+    _isDownloading = true;
+
     int retryCount = 0;
-    
-    while (retryCount < _maxRetries) {
-      try {
-        print("Installing EmbeddingGemma onto local device storage (attempt ${retryCount + 1}/$_maxRetries)...");
-        
-        if (onProgress != null) {
-          onProgress(0.0);
+
+    try {
+      while (retryCount < _maxRetries) {
+        try {
+          print("Installing EmbeddingGemma onto local device storage (attempt ${retryCount + 1}/$_maxRetries)...");
+
+          if (onProgress != null) {
+            onProgress(0.0);
+          }
+
+          // Use FlutterGemma's built-in installer with progress tracking
+          await FlutterGemma.installEmbedder()
+            .modelFromNetwork(
+              'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq256_mixed-precision.tflite'
+            )
+            .tokenizerFromNetwork(
+              'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/sentencepiece.model'
+            )
+            .install();
+
+          if (onProgress != null) {
+            onProgress(1.0);
+          }
+
+          // Get the embedder after successful installation
+          _embedder = await FlutterGemma.getActiveEmbedder();
+          _isModelInstalled = true;
+
+          print("✓ EmbeddingGemma successfully downloaded and ready for offline use.");
+          print("✓ Model size: ~300MB");
+          print("✓ Backend: NNAPI/GPU acceleration enabled");
+          return;
+
+        } catch (e) {
+          retryCount++;
+          print("✗ Download attempt $retryCount failed: $e");
+
+          if (retryCount >= _maxRetries) {
+            print("✗ Failed to download model after $_maxRetries attempts");
+            throw EmbeddingServiceException(
+              'Failed to download EmbeddingGemma model after $_maxRetries attempts: $e'
+            );
+          }
+
+          // Exponential backoff: wait 2^retryCount seconds
+          final waitTime = Duration(seconds: pow(2, retryCount).toInt());
+          print("⏳ Retrying in ${waitTime.inSeconds} seconds...");
+          await Future.delayed(waitTime);
         }
-        
-        // Use FlutterGemma's built-in installer with progress tracking
-        await FlutterGemma.installEmbedder()
-          .modelFromNetwork(
-            'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/embeddinggemma-300M_seq256_mixed-precision.tflite'
-          )
-          .tokenizerFromNetwork(
-            'https://huggingface.co/litert-community/embeddinggemma-300m/resolve/main/sentencepiece.model'
-          )
-          .install();
-        
-        if (onProgress != null) {
-          onProgress(1.0);
-        }
-        
-        // Get the embedder after successful installation
-        _embedder = await FlutterGemma.getActiveEmbedder();
-        _isModelInstalled = true;
-        
-        print("✓ EmbeddingGemma successfully downloaded and ready for offline use.");
-        print("✓ Model size: ~300MB");
-        print("✓ Backend: NNAPI/GPU acceleration enabled");
-        return;
-        
-      } catch (e) {
-        retryCount++;
-        print("✗ Download attempt $retryCount failed: $e");
-        
-        if (retryCount >= _maxRetries) {
-          print("✗ Failed to download model after $_maxRetries attempts");
-          throw EmbeddingServiceException(
-            'Failed to download EmbeddingGemma model after $_maxRetries attempts: $e'
-          );
-        }
-        
-        // Exponential backoff: wait 2^retryCount seconds
-        final waitTime = Duration(seconds: pow(2, retryCount).toInt());
-        print("⏳ Retrying in ${waitTime.inSeconds} seconds...");
-        await Future.delayed(waitTime);
       }
+    } finally {
+      // Always reset the downloading flag
+      _isDownloading = false;
     }
   }
 

@@ -43,9 +43,9 @@ class RagService {
   );
 
   /// Initialize the RAG service with progress tracking
-  /// 
+  ///
   /// Initializes all dependent services with mobile optimizations
-  /// 
+  ///
   /// Parameters:
   /// - onEmbeddingProgress: Optional callback for embedding model download progress
   /// - onTextGenProgress: Optional callback for text generation model download progress
@@ -54,26 +54,40 @@ class RagService {
     Function(double progress)? onTextGenProgress,
   }) async {
     print("🚀 Initializing RAG service...");
-    
+
     // Initialize embedding service
     print("📥 Loading embedding model...");
-    await _embeddingService.initialize(onProgress: onEmbeddingProgress);
-    
+    try {
+      await _embeddingService.initialize(onProgress: onEmbeddingProgress);
+    } catch (e) {
+      print("⚠ Warning: Embedding service initialization failed: $e");
+      print("AI features will be disabled");
+    }
+
     // Initialize text generation service
     print("📥 Loading text generation model...");
-    await _textGenerationService.initialize(onProgress: onTextGenProgress);
-    
+    try {
+      await _textGenerationService.initialize(onProgress: onTextGenProgress);
+    } catch (e) {
+      print("⚠ Warning: Text generation service initialization failed: $e");
+      print("AI features will be disabled");
+    }
+
     // Initialize default subjects in database
     _objectBoxService.initializeDefaultSubjects();
-    
+
     // Warmup models for better first-query performance
     print("🔥 Warming up models...");
-    await Future.wait([
-      _embeddingService.warmup(),
-      _textGenerationService.warmup(),
-    ]);
-    
-    print("✓ RAG service fully initialized and ready for offline use");
+    try {
+      await Future.wait([
+        _embeddingService.warmup(),
+        _textGenerationService.warmup(),
+      ]);
+    } catch (e) {
+      print("⚠ Warning: Model warmup failed: $e");
+    }
+
+    print("✓ RAG service initialized (AI features may be limited)");
   }
 
   /// Process a student's question using RAG (Production-ready version)
